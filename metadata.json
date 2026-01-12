@@ -1,0 +1,5 @@
+{
+  "name": "PromptMaster AI",
+  "description": "A powerful AI tool to generate detailed image generation prompts from text ideas or analyze images to recreate their prompts.",
+  "requestFramePermissions": []
+}
