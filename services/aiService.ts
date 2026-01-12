@@ -5,12 +5,12 @@ import { AIProvider } from "../types";
 const getGeminiClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const MODELS = {
-  gemini_text: 'gemini-3-pro-preview',
+  gemini_text: 'gemini-flash-lite-latest', // Gemini Flash Lite as requested (2.5 light)
   gemini_image: 'gemini-3-flash-preview',
-  groq_text: 'llama-3.3-70b-versatile', // Reliable high-performance text model
-  groq_vision: 'llama-3.2-11b-vision-preview', // Ultra-fast Multimodal model currently active on Groq
+  groq_text: 'llama-3.3-70b-versatile', 
+  groq_vision: 'llama-3.2-11b-vision-preview', 
   mistral_text: 'mistral-small-latest',
-  mistral_vision: 'pixtral-12b-2409' // Pixtral Vision
+  mistral_vision: 'pixtral-12b-2409'
 };
 
 const PROMPT_INSTRUCTION = `
@@ -183,7 +183,6 @@ export const generateImagePrompt = async (
     const results = Array.isArray(parsed.prompts) ? parsed.prompts : (Array.isArray(parsed) ? parsed : [content]);
     return results.map(clampPrompt);
   } catch (e) {
-    // Fallback parsing for non-JSON or malformed JSON responses (common in vision tasks)
     const lines = content.split('\n').filter((s: string) => s.trim().length > 10).slice(0, count);
     return lines.length > 0 ? lines.map(clampPrompt) : [clampPrompt(content)];
   }

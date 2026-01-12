@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ImageToPrompt } from './components/ImageToPrompt';
 import { TextToPrompt } from './components/TextToPrompt';
 import { AppMode, AIProvider, ProviderKeys } from './types';
-import { Aperture, Type, Image as ImageIcon, Sun, Moon, Key, ShieldCheck, AlertCircle, Settings, X, Zap, Wind, Save } from 'lucide-react';
+import { Aperture, Type, Image as ImageIcon, Sun, Moon, Key, AlertCircle, Settings, X, Zap, Wind, Save, Eye, EyeOff, Trash2 } from 'lucide-react';
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<AppMode>(AppMode.ImageToPrompt);
@@ -11,6 +11,10 @@ const App: React.FC = () => {
   const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') !== 'light');
   const [hasGeminiKey, setHasGeminiKey] = useState(false);
   
+  // Visibility toggles for keys
+  const [showGroq, setShowGroq] = useState(false);
+  const [showMistral, setShowMistral] = useState(false);
+
   const [extKeys, setExtKeys] = useState<ProviderKeys>(() => {
     const saved = localStorage.getItem('ext_keys');
     return saved ? JSON.parse(saved) : { groq: '', mistral: '' };
@@ -75,14 +79,13 @@ const App: React.FC = () => {
             </div>
             
             <div className="flex items-center gap-3">
-              {/* Provider Selector */}
               <select 
                 value={provider}
                 onChange={(e) => setProvider(e.target.value as AIProvider)}
                 className={`text-xs font-semibold rounded-lg px-2 py-1.5 border transition-all ${isDark ? 'bg-slate-900 border-slate-700 text-slate-300' : 'bg-white border-slate-200 text-slate-700'}`}
               >
-                <option value={AIProvider.Gemini}>Gemini (Native)</option>
-                <option value={AIProvider.Groq}>Groq (Llama 4 Scout)</option>
+                <option value={AIProvider.Gemini}>Gemini 2.5 Lite</option>
+                <option value={AIProvider.Groq}>Groq (Llama 3.3)</option>
                 <option value={AIProvider.Mistral}>Mistral AI</option>
               </select>
 
@@ -108,15 +111,14 @@ const App: React.FC = () => {
       </nav>
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Connection Banner */}
-        {((provider === AIProvider.Gemini && !hasGeminiKey) || 
+        {((provider === AIProvider.Gemini && !hasGeminiKey) ||
           (provider === AIProvider.Groq && !extKeys.groq) || 
           (provider === AIProvider.Mistral && !extKeys.mistral)) && (
           <div className={`mb-12 p-6 rounded-2xl border flex flex-col sm:flex-row items-start gap-4 animate-fade-in ${isDark ? 'bg-amber-500/5 border-amber-500/20' : 'bg-amber-50 border-amber-200'}`}>
             <AlertCircle className="w-6 h-6 text-amber-500" />
             <div className="flex-1">
               <h3 className="font-bold">Provider Configuration Needed</h3>
-              <p className="text-sm opacity-80">You have selected <strong>{provider.toUpperCase()}</strong>, but no API key is configured. Please provide a manual key in settings to continue.</p>
+              <p className="text-sm opacity-80">You have selected <strong>{provider.toUpperCase()}</strong>, but no API key is configured. Please provide your API key in settings to continue.</p>
               <button 
                 onClick={provider === AIProvider.Gemini ? handleOpenGeminiDialog : () => setShowSettings(true)}
                 className="mt-3 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-semibold hover:bg-amber-600 transition-colors flex items-center gap-2"
@@ -141,7 +143,6 @@ const App: React.FC = () => {
         {mode === AppMode.ImageToPrompt ? <ImageToPrompt provider={provider} keys={extKeys} /> : <TextToPrompt provider={provider} keys={extKeys} />}
       </main>
 
-      {/* Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setShowSettings(false)}></div>
@@ -152,38 +153,76 @@ const App: React.FC = () => {
             </div>
             <div className="p-6 space-y-6">
               <div className="space-y-4">
-                <label className="block">
+                <div className="space-y-2">
                   <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2 mb-2"><Aperture size={12} /> Gemini (Native)</span>
                   <div className={`p-3 rounded-xl border flex items-center justify-between ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}>
                     <span className="text-sm font-medium">{hasGeminiKey ? 'Securely Connected' : 'No Key Selected'}</span>
                     <button onClick={handleOpenGeminiDialog} className="text-xs text-brand-400 hover:underline">Change</button>
                   </div>
-                </label>
+                </div>
 
-                <label className="block">
-                  <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2 mb-2"><Zap size={12} /> Groq API Key</span>
-                  <input 
-                    type="password" 
-                    value={extKeys.groq}
-                    onChange={(e) => saveKeys({...extKeys, groq: e.target.value})}
-                    placeholder="Enter Groq Key..."
-                    className={`w-full px-4 py-3 rounded-xl border text-sm focus:ring-1 focus:ring-orange-500 outline-none ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}
-                  />
-                </label>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Zap size={12} /> Groq API Key</span>
+                    {extKeys.groq && (
+                      <button 
+                        onClick={() => saveKeys({...extKeys, groq: ''})}
+                        className="text-[10px] text-red-500 hover:text-red-400 flex items-center gap-1 transition-colors"
+                      >
+                        <Trash2 size={10} /> Clear
+                      </button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <input 
+                      type={showGroq ? "text" : "password"} 
+                      value={extKeys.groq}
+                      onChange={(e) => saveKeys({...extKeys, groq: e.target.value})}
+                      placeholder="Enter Groq Key..."
+                      className={`w-full pl-4 pr-10 py-3 rounded-xl border text-sm focus:ring-1 focus:ring-orange-500 outline-none transition-all ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowGroq(!showGroq)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                    >
+                      {showGroq ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
 
-                <label className="block">
-                  <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2 mb-2"><Wind size={12} /> Mistral API Key</span>
-                  <input 
-                    type="password" 
-                    value={extKeys.mistral}
-                    onChange={(e) => saveKeys({...extKeys, mistral: e.target.value})}
-                    placeholder="Enter Mistral Key..."
-                    className={`w-full px-4 py-3 rounded-xl border text-sm focus:ring-1 focus:ring-blue-500 outline-none ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}
-                  />
-                </label>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2"><Wind size={12} /> Mistral API Key</span>
+                    {extKeys.mistral && (
+                      <button 
+                        onClick={() => saveKeys({...extKeys, mistral: ''})}
+                        className="text-[10px] text-red-500 hover:text-red-400 flex items-center gap-1 transition-colors"
+                      >
+                        <Trash2 size={10} /> Clear
+                      </button>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <input 
+                      type={showMistral ? "text" : "password"} 
+                      value={extKeys.mistral}
+                      onChange={(e) => saveKeys({...extKeys, mistral: e.target.value})}
+                      placeholder="Enter Mistral Key..."
+                      className={`w-full pl-4 pr-10 py-3 rounded-xl border text-sm focus:ring-1 focus:ring-blue-500 outline-none transition-all ${isDark ? 'bg-slate-950 border-slate-800' : 'bg-slate-50 border-slate-200'}`}
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setShowMistral(!showMistral)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                    >
+                      {showMistral ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
               </div>
               <div className="p-4 rounded-xl bg-slate-800/30 border border-slate-800 text-[10px] text-slate-500 leading-tight">
-                Manual keys are stored locally in your browser session. External providers may require billing setup on their respective platforms.
+                Gemini Native is configured via the environment key selection. External keys are stored locally in your browser session.
               </div>
               <button 
                 onClick={() => setShowSettings(false)}
