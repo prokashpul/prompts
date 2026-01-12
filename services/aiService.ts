@@ -7,8 +7,8 @@ const getGeminiClient = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 const MODELS = {
   gemini_text: 'gemini-3-pro-preview',
   gemini_image: 'gemini-3-flash-preview',
-  groq_text: 'llama-4-scout-preview', // User-specified latest Llama 4 Scout
-  groq_vision: 'llava-v1.5-7b-4096-preview', // Switched to stable Llava as Llama 3.2 Vision models are decommissioned
+  groq_text: 'llama-3.3-70b-versatile', // Reliable high-performance text model
+  groq_vision: 'llama-3.2-11b-vision-preview', // Ultra-fast Multimodal model currently active on Groq
   mistral_text: 'mistral-small-latest',
   mistral_vision: 'pixtral-12b-2409' // Pixtral Vision
 };
